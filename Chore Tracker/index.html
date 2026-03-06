@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Chore Tracker</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#14b8a6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: white;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    /* === HEADER === */
+    .header {
+      background: linear-gradient(135deg, #16213e, #0f3460);
+      padding: 20px 16px 16px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .header h1 { font-size: 22px; margin-bottom: 4px; }
+    .header .subtitle { color: #aaa; font-size: 13px; }
+
+    /* === TOTAL EARNINGS === */
+    .total-box {
+      background: linear-gradient(135deg, #14b8a6, #0d9488);
+      margin: 16px;
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(20,184,166,0.3);
+    }
+    .total-box .label { font-size: 14px; opacity: 0.9; }
+    .total-box .amount { font-size: 42px; font-weight: bold; margin: 4px 0; }
+    .total-box .period-info { font-size: 12px; opacity: 0.7; }
+
+    /* === TAB BAR === */
+    .tabs {
+      display: flex;
+      margin: 0 16px;
+      background: #16213e;
+      border-radius: 12px;
+      padding: 4px;
+      gap: 4px;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      color: #888;
+      background: transparent;
+    }
+    .tab.active {
+      background: #14b8a6;
+      color: white;
+    }
+
+    /* === PANELS === */
+    .panel { display: none; padding: 16px; }
+    .panel.active { display: block; }
+
+    /* === DATE PICKER === */
+    .date-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .date-bar button {
+      background: #0f3460;
+      border: none;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .date-bar .date-text {
+      font-size: 16px;
+      font-weight: 600;
+      min-width: 160px;
+      text-align: center;
+    }
+    .date-bar .today-dot {
+      color: #00ff88;
+      font-size: 11px;
+    }
+
+    /* === CHORE LIST === */
+    .chore-card {
+      background: #16213e;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+    .chore-card.done {
+      border-color: #00ff88;
+      background: #16213e;
+    }
+    .chore-card .checkbox {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 2px solid #444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+    .chore-card.done .checkbox {
+      background: #00ff88;
+      border-color: #00ff88;
+      color: #1a1a2e;
+    }
+    .chore-info { flex: 1; }
+    .chore-name { font-size: 15px; font-weight: 600; }
+    .chore-detail { font-size: 12px; color: #888; margin-top: 2px; }
+    .chore-price {
+      font-size: 16px;
+      font-weight: bold;
+      color: #00ff88;
+      white-space: nowrap;
+    }
+
+    /* === INPUT FIELDS FOR SPECIAL CHORES === */
+    .chore-input-area {
+      margin-top: 8px;
+      display: none;
+    }
+    .chore-card.show-input .chore-input-area {
+      display: block;
+    }
+    .chore-input-area input, .chore-input-area select {
+      background: #0f3460;
+      border: 1px solid #333;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      width: 100%;
+      margin-top: 6px;
+    }
+    .chore-input-area input::placeholder { color: #666; }
+    .chore-input-area .room-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .room-tag {
+      background: #0f3460;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+      border: 1px solid #333;
+      color: #aaa;
+    }
+    .room-tag.selected {
+      background: #14b8a6;
+      border-color: #14b8a6;
+      color: white;
+    }
+    .price-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 6px;
+    }
+    .price-input-row input {
+      width: 80px;
+      flex-shrink: 0;
+    }
+    .price-input-row span {
+      color: #888;
+      font-size: 13px;
+    }
+
+    /* === CUSTOM CHORE BUTTON === */
+    .add-custom {
+      background: linear-gradient(135deg, #0f3460, #16213e);
+      border: 2px dashed #444;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #888;
+      font-size: 15px;
+      width: 100%;
+    }
+    .add-custom:hover { border-color: #14b8a6; color: #14b8a6; }
+
+    .custom-form {
+      background: #16213e;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 10px;
+      display: none;
+    }
+    .custom-form.visible { display: block; }
+    .custom-form input {
+      background: #0f3460;
+      border: 1px solid #333;
+      color: white;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    .custom-form input::placeholder { color: #666; }
+    .custom-form .form-row { display: flex; gap: 8px; }
+    .custom-form .form-row input { flex: 1; }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-primary { background: #14b8a6; color: white; }
+    .btn-secondary { background: #333; color: #aaa; }
+    .btn-block { width: 100%; }
+
+    /* === HISTORY === */
+    .history-day {
+      margin-bottom: 20px;
+    }
+    .history-date {
+      font-size: 14px;
+      font-weight: 600;
+      color: #14b8a6;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #333;
+    }
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      font-size: 14px;
+      border-bottom: 1px solid #1a1a2e;
+    }
+    .history-item .hi-name { color: #ccc; flex: 1; }
+    .history-item .hi-detail { color: #888; font-size: 12px; margin-left: 8px; }
+    .history-item .hi-amount { color: #00ff88; font-weight: 600; white-space: nowrap; margin-left: 12px; }
+    .history-empty {
+      text-align: center;
+      color: #555;
+      padding: 40px 20px;
+      font-size: 15px;
+    }
+
+    /* === STATS === */
+    .stat-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: #16213e;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-card .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #00ff88;
+    }
+    .stat-card .stat-label {
+      font-size: 12px;
+      color: #888;
+      margin-top: 4px;
+    }
+    .streak-bar {
+      background: #16213e;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .streak-bar .streak-num {
+      font-size: 36px;
+      font-weight: bold;
+      color: #ff6b35;
+    }
+    .streak-bar .streak-label {
+      font-size: 13px;
+      color: #888;
+    }
+
+    /* === BOTTOM NAV (for mobile feel) === */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #16213e;
+      display: flex;
+      padding: 8px 0 12px;
+      border-top: 1px solid #333;
+      z-index: 100;
+    }
+    .nav-item {
+      flex: 1;
+      text-align: center;
+      cursor: pointer;
+      color: #666;
+      font-size: 11px;
+      padding: 4px 0;
+      border: none;
+      background: none;
+    }
+    .nav-item.active { color: #14b8a6; }
+    .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+
+    /* === CLEAR DATA === */
+    .danger-zone {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #333;
+    }
+    .btn-danger {
+      background: #442222;
+      color: #ff6666;
+      border: 1px solid #663333;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Chore Tracker</h1>
+    <div class="subtitle">Track your chores, earn your money!</div>
+  </div>
+
+  <div class="total-box">
+    <div class="label">Total Earned</div>
+    <div class="amount" id="totalAmount">0 NIS</div>
+    <div class="period-info" id="periodInfo">All time</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('today')">Today</button>
+    <button class="tab" onclick="switchTab('history')">History</button>
+    <button class="tab" onclick="switchTab('stats')">Stats</button>
+  </div>
+
+  <!-- ===== TODAY PANEL ===== -->
+  <div class="panel active" id="panel-today">
+    <div class="date-bar">
+      <button onclick="changeDate(-1)">&lt;</button>
+      <div>
+        <div class="date-text" id="dateText">Today</div>
+        <div class="today-dot" id="todayDot">today</div>
+      </div>
+      <button onclick="changeDate(1)">&gt;</button>
+    </div>
+
+    <div id="choreList"></div>
+
+    <button class="add-custom" onclick="toggleCustomForm()">
+      + Add a custom chore
+    </button>
+    <div class="custom-form" id="customForm">
+      <input type="text" id="customName" placeholder="What did you do?">
+      <div class="form-row">
+        <input type="number" id="customPrice" placeholder="How much NIS?">
+        <button class="btn btn-primary" onclick="addCustomChore()">Add</button>
+        <button class="btn btn-secondary" onclick="toggleCustomForm()">X</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HISTORY PANEL ===== -->
+  <div class="panel" id="panel-history">
+    <div id="historyList"></div>
+  </div>
+
+  <!-- ===== STATS PANEL ===== -->
+  <div class="panel" id="panel-stats">
+    <div class="streak-bar">
+      <div class="streak-num" id="streakNum">0</div>
+      <div class="streak-label">Day streak (days in a row with chores!)</div>
+    </div>
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-label">NIS Total Earned</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statChores">0</div>
+        <div class="stat-label">Chores Completed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statDays">0</div>
+        <div class="stat-label">Active Days</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statBest">0</div>
+        <div class="stat-label">Best Day (NIS)</div>
+      </div>
+    </div>
+    <div class="stat-card" style="margin-bottom:12px">
+      <div class="stat-label" style="margin-bottom:8px">Top Chore</div>
+      <div class="stat-value" id="statTopChore" style="font-size:18px">-</div>
+    </div>
+
+    <div class="danger-zone">
+      <button class="btn btn-danger btn-block" onclick="confirmClear()">Clear All Data</button>
+    </div>
+  </div>
+
+  <!-- ===== BOTTOM NAV ===== -->
+  <div class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('today')">
+      <span class="nav-icon">&#10003;</span>Today
+    </button>
+    <button class="nav-item" onclick="switchTab('history')">
+      <span class="nav-icon">&#128203;</span>History
+    </button>
+    <button class="nav-item" onclick="switchTab('stats')">
+      <span class="nav-icon">&#9733;</span>Stats
+    </button>
+  </div>
+
+  <script>
+    // ============ CHORE DEFINITIONS ============
+    var CHORES = [
+      { id: "floor",       name: "Wash the floor",                    price: 2, type: "check" },
+      { id: "dishes",      name: "Remove dishes from dishwasher",     price: 2, type: "check" },
+      { id: "hang",        name: "Hang up wet laundry",               price: 2, type: "check" },
+      { id: "takedown",    name: "Take down dry laundry",             price: 1, type: "check" },
+      { id: "dirt",        name: "Clean up dirt",                     price: 2, type: "rooms",  priceNote: "2 NIS per room" },
+      { id: "organize",    name: "General organization",              price: 0, type: "parent", priceNote: "Amount set by parents" },
+      { id: "entrance",    name: "Wash the entrance",                 price: 2, type: "check" },
+      { id: "balcony",     name: "Wash the garden balcony",           price: 2, type: "check" },
+      { id: "door",        name: "Clean the balcony door",            price: 2, type: "check" }
+    ];
+
+    var ROOMS = ["Living Room", "Kitchen", "Bedroom", "Bathroom", "Hallway", "Parents Room"];
+
+    // ============ DATA STORAGE ============
+    var data = loadData();
+
+    function loadData() {
+      try {
+        var saved = localStorage.getItem("choreTracker");
+        if (saved) return JSON.parse(saved);
+      } catch(e) {}
+      return { entries: {} };
+    }
+
+    function saveData() {
+      localStorage.setItem("choreTracker", JSON.stringify(data));
+    }
+
+    function getDateKey(date) {
+      var y = date.getFullYear();
+      var m = String(date.getMonth() + 1).padStart(2, "0");
+      var d = String(date.getDate()).padStart(2, "0");
+      return y + "-" + m + "-" + d;
+    }
+
+    function getDayEntries(dateKey) {
+      if (!data.entries[dateKey]) data.entries[dateKey] = [];
+      return data.entries[dateKey];
+    }
+
+    // ============ CURRENT DATE ============
+    var currentDate = new Date();
+
+    function formatDate(date) {
+      var today = new Date();
+      var todayKey = getDateKey(today);
+      var dateKey = getDateKey(date);
+      if (dateKey === todayKey) return "Today";
+
+      var yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      if (dateKey === getDateKey(yesterday)) return "Yesterday";
+
+      var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return days[date.getDay()] + ", " + date.getDate() + " " + months[date.getMonth()];
+    }
+
+    function formatDateLong(dateKey) {
+      var parts = dateKey.split("-");
+      var date = new Date(parts[0], parts[1]-1, parts[2]);
+      var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return days[date.getDay()] + ", " + date.getDate() + " " + months[date.getMonth()] + " " + parts[0];
+    }
+
+    function changeDate(delta) {
+      currentDate.setDate(currentDate.getDate() + delta);
+      renderToday();
+    }
+
+    function isToday(date) {
+      return getDateKey(date) === getDateKey(new Date());
+    }
+
+    // ============ RENDER TODAY ============
+    function renderToday() {
+      var dateKey = getDateKey(currentDate);
+      var entries = getDayEntries(dateKey);
+
+      document.getElementById("dateText").textContent = formatDate(currentDate);
+      var dot = document.getElementById("todayDot");
+      dot.style.display = isToday(currentDate) ? "block" : "none";
+
+      var html = "";
+      for (var i = 0; i < CHORES.length; i++) {
+        var chore = CHORES[i];
+        var entry = findEntry(entries, chore.id);
+        var isDone = !!entry;
+
+        html += '<div class="chore-card ' + (isDone ? "done" : "") + (chore.type !== "check" && !isDone ? " show-input" : "") + '" id="card-' + chore.id + '">';
+
+        // Checkbox
+        if (chore.type === "check") {
+          html += '<div class="checkbox" onclick="toggleChore(\'' + chore.id + '\')">' + (isDone ? "&#10003;" : "") + '</div>';
+        } else {
+          html += '<div class="checkbox" ' + (isDone ? 'onclick="removeChore(\'' + chore.id + '\')"' : '') + '>' + (isDone ? "&#10003;" : "") + '</div>';
+        }
+
+        html += '<div class="chore-info">';
+        html += '<div class="chore-name">' + chore.name + '</div>';
+        if (chore.priceNote) html += '<div class="chore-detail">' + chore.priceNote + '</div>';
+        if (isDone && entry.detail) html += '<div class="chore-detail" style="color:#00ff88">' + entry.detail + '</div>';
+
+        // Special input areas
+        if (!isDone && chore.type === "rooms") {
+          html += '<div class="chore-input-area" style="display:block">';
+          html += '<div class="room-tags" id="rooms-' + chore.id + '">';
+          for (var r = 0; r < ROOMS.length; r++) {
+            html += '<span class="room-tag" onclick="toggleRoom(this)">' + ROOMS[r] + '</span>';
+          }
+          html += '</div>';
+          html += '<input type="text" placeholder="Or type another room..." id="customRoom-' + chore.id + '">';
+          html += '<button class="btn btn-primary btn-block" style="margin-top:8px" onclick="submitRoomChore(\'' + chore.id + '\')">Done! Add rooms</button>';
+          html += '</div>';
+        }
+
+        if (!isDone && chore.type === "parent") {
+          html += '<div class="chore-input-area" style="display:block">';
+          html += '<input type="text" placeholder="What did you organize?" id="orgDesc-' + chore.id + '">';
+          html += '<div class="price-input-row">';
+          html += '<input type="number" placeholder="NIS" id="orgPrice-' + chore.id + '">';
+          html += '<span>NIS (ask parents!)</span>';
+          html += '</div>';
+          html += '<button class="btn btn-primary btn-block" style="margin-top:8px" onclick="submitParentChore(\'' + chore.id + '\')">Add</button>';
+          html += '</div>';
+        }
+
+        html += '</div>';
+
+        // Price
+        if (isDone) {
+          html += '<div class="chore-price">' + entry.earned + ' NIS</div>';
+        } else if (chore.type === "check") {
+          html += '<div class="chore-price" style="opacity:0.4">' + chore.price + ' NIS</div>';
+        }
+
+        html += '</div>';
+      }
+
+      // Show custom entries for this day
+      for (var i = 0; i < entries.length; i++) {
+        if (entries[i].choreId === "custom") {
+          html += '<div class="chore-card done">';
+          html += '<div class="checkbox" onclick="removeCustomEntry(' + i + ')">&#10003;</div>';
+          html += '<div class="chore-info"><div class="chore-name">' + entries[i].name + '</div>';
+          html += '<div class="chore-detail" style="color:#00ff88">Custom chore</div></div>';
+          html += '<div class="chore-price">' + entries[i].earned + ' NIS</div>';
+          html += '</div>';
+        }
+      }
+
+      document.getElementById("choreList").innerHTML = html;
+      updateTotal();
+    }
+
+    function findEntry(entries, choreId) {
+      for (var i = 0; i < entries.length; i++) {
+        if (entries[i].choreId === choreId) return entries[i];
+      }
+      return null;
+    }
+
+    // ============ CHORE ACTIONS ============
+    function toggleChore(choreId) {
+      var dateKey = getDateKey(currentDate);
+      var entries = getDayEntries(dateKey);
+      var existing = findEntry(entries, choreId);
+
+      if (existing) {
+        // Remove it
+        data.entries[dateKey] = entries.filter(function(e) { return e.choreId !== choreId; });
+      } else {
+        var chore = CHORES.find(function(c) { return c.id === choreId; });
+        entries.push({ choreId: choreId, name: chore.name, earned: chore.price, detail: "" });
+      }
+      saveData();
+      renderToday();
+    }
+
+    function removeChore(choreId) {
+      var dateKey = getDateKey(currentDate);
+      var entries = getDayEntries(dateKey);
+      data.entries[dateKey] = entries.filter(function(e) { return e.choreId !== choreId; });
+      saveData();
+      renderToday();
+    }
+
+    function toggleRoom(el) {
+      el.classList.toggle("selected");
+    }
+
+    function submitRoomChore(choreId) {
+      var tags = document.querySelectorAll("#rooms-" + choreId + " .room-tag.selected");
+      var customRoom = document.getElementById("customRoom-" + choreId).value.trim();
+      var rooms = [];
+      for (var i = 0; i < tags.length; i++) rooms.push(tags[i].textContent);
+      if (customRoom) rooms.push(customRoom);
+
+      if (rooms.length === 0) { alert("Pick at least one room!"); return; }
+
+      var chore = CHORES.find(function(c) { return c.id === choreId; });
+      var earned = rooms.length * chore.price;
+      var dateKey = getDateKey(currentDate);
+      var entries = getDayEntries(dateKey);
+      entries.push({
+        choreId: choreId,
+        name: chore.name,
+        earned: earned,
+        detail: rooms.join(", ") + " (" + rooms.length + " rooms)"
+      });
+      saveData();
+      renderToday();
+    }
+
+    function submitParentChore(choreId) {
+      var desc = document.getElementById("orgDesc-" + choreId).value.trim();
+      var price = parseFloat(document.getElementById("orgPrice-" + choreId).value);
+
+      if (!desc) { alert("Write what you organized!"); return; }
+      if (!price || price <= 0) { alert("Ask your parents for the price!"); return; }
+
+      var chore = CHORES.find(function(c) { return c.id === choreId; });
+      var dateKey = getDateKey(currentDate);
+      var entries = getDayEntries(dateKey);
+      entries.push({
+        choreId: choreId,
+        name: chore.name,
+        earned: price,
+        detail: desc
+      });
+      saveData();
+      renderToday();
+    }
+
+    // ============ CUSTOM CHORES ============
+    function toggleCustomForm() {
+      document.getElementById("customForm").classList.toggle("visible");
+    }
+
+    function addCustomChore() {
+      var name = document.getElementById("customName").value.trim();
+      var price = parseFloat(document.getElementById("customPrice").value);
+      if (!name) { alert("Write what you did!"); return; }
+      if (!price || price <= 0) { alert("How much did you earn?"); return; }
+
+      var dateKey = getDateKey(currentDate);
+      var entries = getDayEntries(dateKey);
+      entries.push({ choreId: "custom", name: name, earned: price, detail: "" });
+      saveData();
+
+      document.getElementById("customName").value = "";
+      document.getElementById("customPrice").value = "";
+      document.getElementById("customForm").classList.remove("visible");
+      renderToday();
+    }
+
+    function removeCustomEntry(index) {
+      var dateKey = getDateKey(currentDate);
+      data.entries[dateKey].splice(index, 1);
+      saveData();
+      renderToday();
+    }
+
+    // ============ TOTAL ============
+    function updateTotal() {
+      var total = 0;
+      var keys = Object.keys(data.entries);
+      for (var i = 0; i < keys.length; i++) {
+        var entries = data.entries[keys[i]];
+        for (var j = 0; j < entries.length; j++) {
+          total += entries[j].earned;
+        }
+      }
+      document.getElementById("totalAmount").textContent = total + " NIS";
+
+      // Today's earnings
+      var dateKey = getDateKey(currentDate);
+      var dayEntries = getDayEntries(dateKey);
+      var dayTotal = 0;
+      for (var i = 0; i < dayEntries.length; i++) dayTotal += dayEntries[i].earned;
+      document.getElementById("periodInfo").textContent = "Today: " + dayTotal + " NIS | All time: " + total + " NIS";
+    }
+
+    // ============ HISTORY ============
+    function renderHistory() {
+      var keys = Object.keys(data.entries).sort().reverse();
+      var html = "";
+      var hasAny = false;
+
+      for (var i = 0; i < keys.length; i++) {
+        var entries = data.entries[keys[i]];
+        if (entries.length === 0) continue;
+        hasAny = true;
+
+        var dayTotal = 0;
+        for (var j = 0; j < entries.length; j++) dayTotal += entries[j].earned;
+
+        html += '<div class="history-day">';
+        html += '<div class="history-date">' + formatDateLong(keys[i]) + ' - ' + dayTotal + ' NIS</div>';
+        for (var j = 0; j < entries.length; j++) {
+          var e = entries[j];
+          html += '<div class="history-item">';
+          html += '<span class="hi-name">' + e.name + '</span>';
+          if (e.detail) html += '<span class="hi-detail">' + e.detail + '</span>';
+          html += '<span class="hi-amount">+' + e.earned + '</span>';
+          html += '</div>';
+        }
+        html += '</div>';
+      }
+
+      if (!hasAny) {
+        html = '<div class="history-empty">No chores done yet!<br>Go do some chores and come back!</div>';
+      }
+
+      document.getElementById("historyList").innerHTML = html;
+    }
+
+    // ============ STATS ============
+    function renderStats() {
+      var keys = Object.keys(data.entries).sort();
+      var totalEarned = 0;
+      var totalChores = 0;
+      var activeDays = 0;
+      var bestDay = 0;
+      var choreCounts = {};
+
+      for (var i = 0; i < keys.length; i++) {
+        var entries = data.entries[keys[i]];
+        if (entries.length === 0) continue;
+        activeDays++;
+        var dayTotal = 0;
+        for (var j = 0; j < entries.length; j++) {
+          totalEarned += entries[j].earned;
+          totalChores++;
+          dayTotal += entries[j].earned;
+          var cName = entries[j].name;
+          choreCounts[cName] = (choreCounts[cName] || 0) + 1;
+        }
+        if (dayTotal > bestDay) bestDay = dayTotal;
+      }
+
+      // Streak calculation
+      var streak = 0;
+      var checkDate = new Date();
+      while (true) {
+        var dk = getDateKey(checkDate);
+        var ent = data.entries[dk];
+        if (ent && ent.length > 0) {
+          streak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+
+      // Top chore
+      var topChore = "-";
+      var topCount = 0;
+      var choreNames = Object.keys(choreCounts);
+      for (var i = 0; i < choreNames.length; i++) {
+        if (choreCounts[choreNames[i]] > topCount) {
+          topCount = choreCounts[choreNames[i]];
+          topChore = choreNames[i] + " (" + topCount + "x)";
+        }
+      }
+
+      document.getElementById("streakNum").textContent = streak;
+      document.getElementById("statTotal").textContent = totalEarned;
+      document.getElementById("statChores").textContent = totalChores;
+      document.getElementById("statDays").textContent = activeDays;
+      document.getElementById("statBest").textContent = bestDay;
+      document.getElementById("statTopChore").textContent = topChore;
+    }
+
+    // ============ TABS ============
+    function switchTab(tab) {
+      var tabs = document.querySelectorAll(".tab");
+      var panels = document.querySelectorAll(".panel");
+      var navItems = document.querySelectorAll(".nav-item");
+
+      for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
+      for (var i = 0; i < panels.length; i++) panels[i].classList.remove("active");
+      for (var i = 0; i < navItems.length; i++) navItems[i].classList.remove("active");
+
+      document.getElementById("panel-" + tab).classList.add("active");
+
+      var tabIndex = tab === "today" ? 0 : tab === "history" ? 1 : 2;
+      tabs[tabIndex].classList.add("active");
+      navItems[tabIndex].classList.add("active");
+
+      if (tab === "history") renderHistory();
+      if (tab === "stats") renderStats();
+    }
+
+    // ============ CLEAR DATA ============
+    function confirmClear() {
+      if (confirm("Are you SURE you want to delete ALL your chore data? This cannot be undone!")) {
+        if (confirm("REALLY sure? All your history will be gone forever!")) {
+          data = { entries: {} };
+          saveData();
+          renderToday();
+          renderHistory();
+          renderStats();
+          alert("All data cleared!");
+        }
+      }
+    }
+
+    // ============ INIT ============
+    renderToday();
+
+    // Register service worker for PWA
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js");
+    }
+  </script>
+</body>
+</html>
