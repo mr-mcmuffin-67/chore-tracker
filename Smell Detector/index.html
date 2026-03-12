@@ -44,6 +44,71 @@
       line-height: 1.6;
     }
 
+    /* === Setup Screen === */
+    .setup-screen { display: block; }
+    .setup-screen.hidden { display: none; }
+
+    .setup-screen label {
+      display: block;
+      font-size: 16px;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 8px;
+      text-align: right;
+    }
+
+    .setup-screen input[type="text"] {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 2px solid #334155;
+      background: #16213e;
+      color: white;
+      font-size: 18px;
+      font-family: inherit;
+      outline: none;
+      text-align: right;
+      margin-bottom: 24px;
+      transition: border-color 0.2s;
+    }
+    .setup-screen input[type="text"]:focus {
+      border-color: #6366f1;
+    }
+
+    .score-selector {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+    .score-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      border: 2px solid #334155;
+      background: #16213e;
+      color: #94a3b8;
+      font-size: 22px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .score-btn:hover {
+      border-color: #6366f1;
+      color: white;
+    }
+    .score-btn.selected {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-color: #8b5cf6;
+      color: white;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    }
+
+    /* === Main Screen === */
+    .main-screen { display: none; }
+    .main-screen.active { display: block; }
+
     /* Button */
     .scan-btn {
       background: linear-gradient(135deg, #6366f1, #8b5cf6);
@@ -69,6 +134,33 @@
       opacity: 0.5;
       cursor: not-allowed;
       transform: none;
+    }
+
+    .start-btn {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: none;
+      color: white;
+      font-size: 20px;
+      font-weight: 700;
+      padding: 18px 48px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+      box-shadow: 0 6px 25px rgba(99, 102, 241, 0.4);
+      font-family: inherit;
+    }
+    .start-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.5);
+    }
+    .start-btn:active {
+      transform: translateY(0);
+    }
+    .start-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
     }
 
     /* Scanning animation */
@@ -139,8 +231,6 @@
     .result {
       display: none;
       margin-top: 36px;
-      background: linear-gradient(135deg, #1e1b3a, #2d1f4e);
-      border: 1px solid #4c1d95;
       border-radius: 20px;
       padding: 28px 24px;
       animation: fadeIn 0.5s ease;
@@ -159,7 +249,6 @@
 
     .severity {
       display: inline-block;
-      background: #dc2626;
       color: white;
       font-size: 13px;
       font-weight: 700;
@@ -167,6 +256,8 @@
       border-radius: 20px;
       margin-bottom: 16px;
       letter-spacing: 1px;
+    }
+    .severity.pulsing {
       animation: pulse 1.5s infinite;
     }
 
@@ -178,21 +269,18 @@
     .result-title {
       font-size: 22px;
       font-weight: 800;
-      color: #f87171;
       margin-bottom: 12px;
       line-height: 1.5;
     }
 
     .result-source {
       font-size: 18px;
-      color: #fbbf24;
       font-weight: 700;
       margin-bottom: 8px;
     }
 
     .result-detail {
       font-size: 16px;
-      color: #f87171;
       font-weight: 600;
       margin-bottom: 16px;
     }
@@ -202,12 +290,9 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      background: rgba(220, 38, 38, 0.15);
-      border: 1px solid rgba(220, 38, 38, 0.3);
       border-radius: 12px;
       padding: 14px;
       font-size: 15px;
-      color: #fca5a5;
       font-weight: 600;
       line-height: 1.5;
     }
@@ -231,13 +316,11 @@
       height: 100%;
       width: 0%;
       border-radius: 8px;
-      background: linear-gradient(90deg, #facc15, #f97316, #ef4444, #dc2626);
       transition: width 1s ease;
     }
     .meter-value {
       font-size: 36px;
       font-weight: 800;
-      color: #dc2626;
       margin-top: 4px;
     }
 
@@ -302,61 +385,164 @@
 <body>
 
 <div class="container">
-  <div class="icon">👃</div>
-  <h1>גלאי ריחות מתקדם</h1>
-  <p class="subtitle">מערכת זיהוי ריחות חכמה עם טכנולוגיה מתקדמת.<br>לחצו על הכפתור כדי לבצע סריקה.</p>
+  <!-- Setup Screen -->
+  <div class="setup-screen" id="setupScreen">
+    <div class="icon">👃</div>
+    <h1>גלאי ריחות מתקדם</h1>
+    <p class="subtitle">מערכת זיהוי ריחות חכמה עם טכנולוגיה מתקדמת.</p>
 
-  <button class="scan-btn" id="scanBtn" onclick="startScan()">🔬 בדוק את הריח</button>
+    <label for="nameInput">שם החשוד:</label>
+    <input type="text" id="nameInput" placeholder="הכניסו שם..." oninput="checkReady()">
 
-  <div class="scanning" id="scanning">
-    <div class="waves">
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
+    <label>דירוג סירחון:</label>
+    <div class="score-selector" id="scoreSelector">
+      <button class="score-btn" onclick="selectScore(7)">7</button>
+      <button class="score-btn" onclick="selectScore(8)">8</button>
+      <button class="score-btn" onclick="selectScore(9)">9</button>
+      <button class="score-btn" onclick="selectScore(10)">10</button>
     </div>
-    <p class="scanning-text" id="scanText">מריח... אנא המתינו</p>
-    <div class="progress-bar">
-      <div class="progress-fill" id="progressFill"></div>
-    </div>
-    <p class="scan-percentage" id="scanPercent">0%</p>
+
+    <button class="start-btn" id="startBtn" onclick="goToScan()" disabled>🔬 התחל סריקה</button>
   </div>
 
-  <div class="alert-phase" id="alertPhase">
-    <div class="siren-icon">🚨</div>
-    <p class="alert-text">אזהרה! זוהה ריח קיצוני!</p>
-  </div>
+  <!-- Main Screen -->
+  <div class="main-screen" id="mainScreen">
+    <div class="icon">👃</div>
+    <h1>גלאי ריחות מתקדם</h1>
+    <p class="subtitle">מערכת זיהוי ריחות חכמה עם טכנולוגיה מתקדמת.<br>לחצו על הכפתור כדי לבצע סריקה.</p>
 
-  <div class="result" id="result">
-    <div class="result-icon">☠️</div>
-    <div class="severity">⚠️ סכנה קריטית ⚠️</div>
-    <p class="result-title">זה הריח הכי נורא שהמערכת זיהתה אי פעם!</p>
+    <button class="scan-btn" id="scanBtn" onclick="startScan()">🔬 בדוק את הריח</button>
 
-    <div class="meter">
-      <p class="meter-label">רמת סירחון</p>
-      <div class="meter-bar">
-        <div class="meter-fill" id="meterFill"></div>
+    <div class="scanning" id="scanning">
+      <div class="waves">
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
       </div>
-      <p class="meter-value">10/10</p>
+      <p class="scanning-text" id="scanText">מריח... אנא המתינו</p>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <p class="scan-percentage" id="scanPercent">0%</p>
     </div>
 
-    <p class="result-source">🎯 מקור הריח: הפלוץ של יהל חיון</p>
-    <p class="result-detail">זוהה כנשק ביולוגי מסוכן</p>
-
-    <div class="result-warning">
-      ⚠️ התרחקו מיד! מסוכן לכל הסובבים!
+    <div class="alert-phase" id="alertPhase">
+      <div class="siren-icon">🚨</div>
+      <p class="alert-text" id="alertText">אזהרה! זוהה ריח קיצוני!</p>
     </div>
 
-    <button class="reset-btn" onclick="resetScan()">🔄 בדוק שוב</button>
+    <div class="result" id="result">
+      <div class="result-icon" id="resultIcon">☠️</div>
+      <div class="severity" id="severityBadge">⚠️ סכנה קריטית ⚠️</div>
+      <p class="result-title" id="resultTitle"></p>
+
+      <div class="meter">
+        <p class="meter-label">רמת סירחון</p>
+        <div class="meter-bar">
+          <div class="meter-fill" id="meterFill"></div>
+        </div>
+        <p class="meter-value" id="meterValue"></p>
+      </div>
+
+      <p class="result-source" id="resultSource"></p>
+      <p class="result-detail" id="resultDetail"></p>
+
+      <div class="result-warning" id="resultWarning"></div>
+
+      <button class="reset-btn" onclick="resetScan()">🔄 בדוק שוב</button>
+    </div>
   </div>
 </div>
 
 <script>
+  let selectedName = '';
+  let selectedScore = 0;
+
+  const scoreData = {
+    7: {
+      icon: '😷',
+      badge: '⚠️ ריח חשוד ⚠️',
+      badgeColor: '#d97706',
+      badgePulse: false,
+      title: 'המערכת זיהתה ריח מפוקפק באזור!',
+      source: '🎯 מקור הריח: הפלוץ של {name}',
+      detail: 'ריח לא נעים אך ניתן לשרוד',
+      warning: '👃 מומלץ לפתוח חלון',
+      warningBg: 'rgba(217, 119, 6, 0.15)',
+      warningBorder: 'rgba(217, 119, 6, 0.3)',
+      warningColor: '#fcd34d',
+      titleColor: '#fbbf24',
+      meterColor: 'linear-gradient(90deg, #facc15, #f97316)',
+      resultBg: 'linear-gradient(135deg, #1e1b2e, #2d2520)',
+      resultBorder: '#92400e',
+      alertText: 'זוהה ריח חשוד...',
+      flashColor: '#3b2a0a'
+    },
+    8: {
+      icon: '🤢',
+      badge: '⚠️ ריח חזק ⚠️',
+      badgeColor: '#ea580c',
+      badgePulse: false,
+      title: 'ריח חזק מאוד זוהה! המערכת מתקשה לעבד!',
+      source: '🎯 מקור הריח: הפלוץ של {name}',
+      detail: 'ריח עוצמתי שפוגע באיכות האוויר',
+      warning: '🫣 רצוי להתרחק מהאזור',
+      warningBg: 'rgba(234, 88, 12, 0.15)',
+      warningBorder: 'rgba(234, 88, 12, 0.3)',
+      warningColor: '#fdba74',
+      titleColor: '#fb923c',
+      meterColor: 'linear-gradient(90deg, #facc15, #f97316, #ef4444)',
+      resultBg: 'linear-gradient(135deg, #1e1b32, #2d2025)',
+      resultBorder: '#9a3412',
+      alertText: 'אזהרה! ריח חזק זוהה!',
+      flashColor: '#3b1a0a'
+    },
+    9: {
+      icon: '🤮',
+      badge: '🚨 סכנה גבוהה 🚨',
+      badgeColor: '#dc2626',
+      badgePulse: true,
+      title: 'ריח קטלני! המערכת כמעט קרסה!',
+      source: '🎯 מקור הריח: הפלוץ של {name}',
+      detail: 'זוהה כחומר מסוכן ברמה גבוהה',
+      warning: '🚨 התרחקו! סכנה לבריאות!',
+      warningBg: 'rgba(220, 38, 38, 0.15)',
+      warningBorder: 'rgba(220, 38, 38, 0.3)',
+      warningColor: '#fca5a5',
+      titleColor: '#f87171',
+      meterColor: 'linear-gradient(90deg, #facc15, #f97316, #ef4444, #dc2626)',
+      resultBg: 'linear-gradient(135deg, #1e1b38, #2d1f40)',
+      resultBorder: '#7f1d1d',
+      alertText: 'אזהרה! ריח מסוכן זוהה!',
+      flashColor: '#3b0a0a'
+    },
+    10: {
+      icon: '☠️',
+      badge: '☢️ סכנה קריטית ☢️',
+      badgeColor: '#dc2626',
+      badgePulse: true,
+      title: 'זה הריח הכי נורא שהמערכת זיהתה אי פעם!',
+      source: '🎯 מקור הריח: הפלוץ של {name}',
+      detail: 'זוהה כנשק ביולוגי מסוכן',
+      warning: '☠️ התרחקו מיד! מסוכן לכל הסובבים!',
+      warningBg: 'rgba(220, 38, 38, 0.15)',
+      warningBorder: 'rgba(220, 38, 38, 0.3)',
+      warningColor: '#fca5a5',
+      titleColor: '#f87171',
+      meterColor: 'linear-gradient(90deg, #facc15, #f97316, #ef4444, #dc2626)',
+      resultBg: 'linear-gradient(135deg, #1e1b3a, #2d1f4e)',
+      resultBorder: '#4c1d95',
+      alertText: 'אזהרה! זוהה ריח קיצוני!',
+      flashColor: '#3b0a0a'
+    }
+  };
+
   const scanMessages = [
     'מריח... אנא המתינו',
     'מנתח מולקולות אוויר...',
@@ -366,6 +552,25 @@
     'מנסה לזהות את המקור...',
     'המערכת בהלם...'
   ];
+
+  function selectScore(score) {
+    selectedScore = score;
+    document.querySelectorAll('.score-btn').forEach(btn => btn.classList.remove('selected'));
+    event.target.classList.add('selected');
+    checkReady();
+  }
+
+  function checkReady() {
+    const name = document.getElementById('nameInput').value.trim();
+    const btn = document.getElementById('startBtn');
+    btn.disabled = !(name && selectedScore);
+  }
+
+  function goToScan() {
+    selectedName = document.getElementById('nameInput').value.trim();
+    document.getElementById('setupScreen').classList.add('hidden');
+    document.getElementById('mainScreen').classList.add('active');
+  }
 
   function startScan() {
     const btn = document.getElementById('scanBtn');
@@ -406,9 +611,16 @@
     const scanning = document.getElementById('scanning');
     scanning.classList.remove('active');
 
+    const data = scoreData[selectedScore];
+
+    document.getElementById('alertText').textContent = data.alertText;
+
     const alertPhase = document.getElementById('alertPhase');
     alertPhase.classList.add('active');
     document.body.classList.add('alert-flash');
+
+    // Override flash color for lower scores
+    document.documentElement.style.setProperty('--flash-color', data.flashColor);
 
     // Play siren sound using Web Audio API
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -419,7 +631,6 @@
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.type = 'sawtooth';
-      // Alternate high/low siren tones
       osc.frequency.setValueAtTime(i % 2 === 0 ? 800 : 500, sirenTime);
       gain.gain.setValueAtTime(0.15, sirenTime);
       gain.gain.exponentialRampToValueAtTime(0.01, sirenTime + 0.4);
@@ -436,11 +647,48 @@
   }
 
   function showResult() {
+    const data = scoreData[selectedScore];
     const result = document.getElementById('result');
+
+    // Apply styles
+    result.style.background = data.resultBg;
+    result.style.border = '1px solid ' + data.resultBorder;
+
+    document.getElementById('resultIcon').textContent = data.icon;
+
+    const badge = document.getElementById('severityBadge');
+    badge.textContent = data.badge;
+    badge.style.background = data.badgeColor;
+    badge.className = 'severity' + (data.badgePulse ? ' pulsing' : '');
+
+    const title = document.getElementById('resultTitle');
+    title.textContent = data.title;
+    title.style.color = data.titleColor;
+
+    document.getElementById('meterValue').textContent = selectedScore + '/10';
+    document.getElementById('meterValue').style.color = data.badgeColor;
+
+    const source = document.getElementById('resultSource');
+    source.textContent = data.source.replace('{name}', selectedName);
+    source.style.color = '#fbbf24';
+
+    const detail = document.getElementById('resultDetail');
+    detail.textContent = data.detail;
+    detail.style.color = data.titleColor;
+
+    const warning = document.getElementById('resultWarning');
+    warning.textContent = data.warning;
+    warning.style.background = data.warningBg;
+    warning.style.border = '1px solid ' + data.warningBorder;
+    warning.style.color = data.warningColor;
+
+    const meterFill = document.getElementById('meterFill');
+    meterFill.style.background = data.meterColor;
+
     result.classList.add('active');
 
     setTimeout(() => {
-      document.getElementById('meterFill').style.width = '100%';
+      meterFill.style.width = (selectedScore * 10) + '%';
     }, 200);
   }
 
@@ -455,6 +703,11 @@
     result.classList.remove('active');
     document.getElementById('alertPhase').classList.remove('active');
     document.body.classList.remove('alert-flash');
+
+    // Go back to setup screen
+    document.getElementById('mainScreen').classList.remove('active');
+    document.getElementById('setupScreen').classList.remove('hidden');
+
     btn.disabled = false;
     btn.style.display = '';
     fill.style.width = '0%';
